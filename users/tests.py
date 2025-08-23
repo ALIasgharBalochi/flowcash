@@ -52,3 +52,29 @@ class UserLoginTest(APITestCase):
         self.assertIn("refresh", response.data)
         self.assertTrue(response.data["access"])
         self.assertIsInstance(response.data["access"], str)
+
+class ProfileUpdateTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password="password123",
+            first_name="Old",
+            last_name="Name"
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+    def test_update_profile(self):
+        response = self.client.patch("/account/profile/", {
+            "first_name": "NewName"
+        }, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["first_name"], "NewName")
