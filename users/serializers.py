@@ -17,3 +17,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'] 
         )
         return user
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id","email","first_name","last_name") 
+
