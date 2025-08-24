@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import environ
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,6 +27,10 @@ SECRET_KEY = 'django-insecure-c1as#86s81eb#s!)=jbq-uj^*930$1w2zzzc(c2q8ch-dhy_qo
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+#set env 
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR,'.env'))
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -94,6 +99,15 @@ DATABASES = {
             'PORT': '5432',  # Default PostgreSQL port
         }
 }
+
+#Email setup backend
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
