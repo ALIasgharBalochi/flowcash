@@ -23,3 +23,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id","email","first_name","last_name") 
 
+class ResetPasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate_new_password(self,value):
+        if len(value) < 6:
+            raise serializers.ValidationError('Password must be at least 6 characters long.')
+        return value

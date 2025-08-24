@@ -1,10 +1,11 @@
 from django.shortcuts import render
+from django.contrib.auth import update_session_auth_hash
 from rest_framework import status,generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer,UserProfileSerializer
+from .serializers import UserRegisterSerializer,UserProfileSerializer,ResetPasswordSerializer
 
 User = get_user_model()
 class UserRegisterView(APIView):
@@ -29,3 +30,22 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         kwargs['partial']=True
         return super().update(request,*args,**kwargs)
 
+class ResetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        serializer = ResetPasswordSerializer(data=request.data)
+
+        user = request.user
+
+        if serializer.is_valid():
+            if not user.check_password(serializer.validated_data["old_password"]):
+                return Response({"message":'the current password is incorrect'},status=status.HTTP_400_BAD_REQUEST)
+            
+            user.set_password(serializer.validated_data["new_password"])
+            user.save()
+
+            update_session_auth_hash(request,user)
+
+            return Response({"message": "Password changed successfully."},status=status.HTTP_200_OK)
+        return Response({"message": serializer.error},status=status.HTTP_400_BAD_REQUEST)
