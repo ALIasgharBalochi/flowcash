@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth import update_session_auth_hash
 from rest_framework import status,generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer
+from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer,ResetPasswordSerializer
+from core.views import generate_reset_password_jwt
+from django.core.mail import send_mail
 
 User = get_user_model()
 class UserRegisterView(APIView):
@@ -49,3 +51,39 @@ class ChangePasswordView(APIView):
 
             return Response({"message": "Password changed successfully."},status=status.HTTP_200_OK)
         return Response({"message": serializer.error},status=status.HTTP_400_BAD_REQUEST)
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self,request):
+        serializer = ResetPasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = User.objects.get(email=serializer.validated_data["email"])
+            token = generate_reset_password_jwt(user)
+
+            send_mail(
+                subject="FlowCash Password Reset Request",
+                message=f"""
+                    Hello {user.first_name},
+
+                    We received a request to reset your password for your FlowCash account.
+                    Click the link below to reset your password:
+
+                    your token it is : {token}
+
+                    If you did not request this, please ignore this email.
+
+                    Thanks,
+                    The FlowCash Team
+                    """,
+                from_email="alibalochi1910@gmail.com",
+                recipient_list=[user.email]
+                ) 
+            return Response({"message": "Token successfully sent to email."}, status=status.HTTP_200_OK)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+

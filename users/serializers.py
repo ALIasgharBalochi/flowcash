@@ -31,3 +31,12 @@ class ChangePasswordSerializer(serializers.Serializer):
         if len(value) < 6:
             raise serializers.ValidationError('Password must be at least 6 characters long.')
         return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self,value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('This email is not registered')   
+        return value
+        
