@@ -98,7 +98,7 @@ class ChangePasswordTest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
     def test_change_password(self):
-        url = reverse('re_password')
+        url = reverse('ch_password')
         data = {
             "old_password": "password123",
             "new_password": "passwordNew"

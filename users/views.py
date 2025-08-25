@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer,UserProfileSerializer,ResetPasswordSerializer
+from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer
 
 User = get_user_model()
 class UserRegisterView(APIView):
@@ -30,11 +30,11 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         kwargs['partial']=True
         return super().update(request,*args,**kwargs)
 
-class ResetPasswordView(APIView):
+class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self,request):
-        serializer = ResetPasswordSerializer(data=request.data)
+        serializer = ChangePasswordSerializer(data=request.data)
 
         user = request.user
 

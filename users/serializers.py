@@ -23,7 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id","email","first_name","last_name") 
 
-class ResetPasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField()
 
