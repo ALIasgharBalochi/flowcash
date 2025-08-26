@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer,RequestResetPasswordSerializer
+from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer,RequestResetPasswordSerializer,ResetPasswordSerializer
 from core.views import generate_reset_password_jwt
 from django.core.mail import send_mail
 
@@ -83,7 +83,22 @@ class RequestResetPasswordView(APIView):
             return Response({"message": "Token successfully sent to email."}, status=status.HTTP_200_OK)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+class ResetPasswrodView(APIView):
+    permission_classes = [AllowAny]
 
+    def post(self,request):
+        serializer = ResetPasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+
+            user.set_password(serializer.validated_data["new_password"])
+            user.save()
+
+            update_session_auth_hash(request,user)
+
+            return Response({'message':'Password changed successfully.'},status=status.HTTP_200_OK)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

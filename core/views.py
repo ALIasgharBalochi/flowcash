@@ -9,8 +9,8 @@ def generate_reset_password_jwt(user):
         "user_id": user.id,
         "email": user.email,
         "type": "reset_password",
-        "exp": datetime.now() + timedelta(minutes=10),
-        "iat": datetime.now()
+        "exp": datetime.utcnow() + timedelta(minutes=10),
+        "iat": datetime.utcnow()
     }
     token = jwt.encode(payload,settings.SECRET_KEY,algorithm="HS256")
     return token 

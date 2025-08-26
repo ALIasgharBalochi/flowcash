@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+import jwt
+from django.conf import settings
 
 User = get_user_model()
 
@@ -39,4 +41,36 @@ class RequestResetPasswordSerializer(serializers.Serializer):
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError('This email is not registered')   
         return value
-        
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate(self, attrs):
+        token = attrs.get("token")
+        print('token',token)
+
+        try:
+            payload = jwt.decode(
+                jwt=token,
+                key=settings.SECRET_KEY,
+                algorithms=["HS256"]
+            )
+            print('payload',payload)
+            user = User.objects.get(id=payload["user_id"])
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError({"token": "Activation link expired"})
+        except jwt.InvalidTokenError:
+            raise serializers.ValidationError({"token": "Invalid token"})
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"token": "User not found"})
+
+        attrs["user"] = user  
+        return attrs
+
+    def validate_new_password(self, value):
+        if len(value) < 6:
+            raise serializers.ValidationError("Password must be at least 6 characters long.")
+        return value
+
+
