@@ -5,9 +5,11 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response 
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer,RequestResetPasswordSerializer,ResetPasswordSerializer
+from .models import OTPToken
+from .serializers import UserRegisterSerializer,UserProfileSerializer,ChangePasswordSerializer,RequestResetPasswordSerializer,ResetPasswordSerializer,VerifiedEmail
 from core.views import generate_reset_password_jwt
 from django.core.mail import send_mail
+from django.utils import timezone 
 
 User = get_user_model()
 class UserRegisterView(APIView):
@@ -100,5 +102,45 @@ class ResetPasswrodView(APIView):
             return Response({'message':'Password changed successfully.'},status=status.HTTP_200_OK)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+class EmailVerifiedToken(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        user = request.user  
+        OTPToken.objects.filter(user=user).delete()   
+        otp_token = OTPToken.create_token(user)
+
+        send_mail(
+            subject="Your OTP code for email verification",
+            message=f"Your OTP code is: {otp_token.otp_code}",
+            from_email="alibalochi1910@gmail.com",
+            recipient_list=[user.email]
+        )
+        return Response({"message": "OTP code sent successfully"}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = VerifiedEmail(data=request.data)
+        user = request.user  
+
+        if serializer.is_valid():
+            otp_token = OTPToken.objects.filter(
+                user=user,
+                otp_code=serializer.validated_data['code'],
+                expires_at__gte=timezone.now()
+            ).first()
+
+            if otp_token:
+                user.is_verified = True
+                user.save()
+                otp_token.delete()
+                return Response(
+                    {"message": "Your email has been successfully verified."},
+                    status=status.HTTP_200_OK
+                )
+
+            return Response({"message": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        
 

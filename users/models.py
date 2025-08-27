@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
-import random
-from datetime import datetime,timedelta
+from datetime import timedelta
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -37,9 +36,15 @@ class OTPToken(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 
-    def save(self,*args,**kwargs):
-        if not self.otp_code:
-            self.otp_code = str(random.randint(100000,999999))
-        if not self.expires_at:
-            self.expires_at = datetime.now() + timedelta(minutes=2)
-        super().save(*args,**kwargs)
+    @classmethod
+    def create_token(cls,user,minuts=2):
+        from django.utils import timezone
+        import random
+
+        otp = str(random.randint(100000,999999))
+        expires = timezone.now() + timedelta(minutes=minuts)
+        return cls.objects.create(user=user,otp_code=otp,expires_at=expires)
+
+    def __str__(self):
+         return self.otp_code
+
