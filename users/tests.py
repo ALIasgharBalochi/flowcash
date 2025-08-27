@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from .models import OTPToken
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -151,3 +152,29 @@ class VerifyEmailTest(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("Invalid or expired OTP", response.data["message"])
+
+class ResetPasswordFlowTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password="password123",
+            first_name="testname",
+            last_name="testFname"
+        )
+
+    def test_request_reset_password_email_sent(self):
+        response = self.client.post("/account/re_password/request_token/", {"email": "test@example.com"})
+        self.assertEqual(response.status_code, 200)
+        from django.core import mail
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_reset_password_with_valid_token(self):
+        token = RefreshToken.for_user(self.user).access_token
+        response = self.client.post("/account/re_password/reset_password/", {"token": str(token), "new_password": "newpassword123"})
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("newpassword123"))
+
+    def test_reset_password_with_invalid_token(self):
+        response = self.client.post("/account/re_password/reset_password/", {"token": "invalidtoken", "new_password": "newpassword123"})
+        self.assertEqual(response.status_code, 400)
