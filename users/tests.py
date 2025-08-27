@@ -1,6 +1,9 @@
 from rest_framework.test import APITestCase,APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from .models import OTPToken
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -108,3 +111,43 @@ class ChangePasswordTest(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["message"],"Password changed successfully.")
+
+class VerifyEmailTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password="password123",
+            first_name="testname",
+            last_name="testFname"
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+    def test_verify_email_success(self):
+        otp_token = OTPToken.objects.create(
+            user=self.user,
+            otp_code="123456",
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+
+        response = self.client.post("/account/email_verified/", {
+            "code": "123456"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.get(id=self.user.id).is_verified)
+
+    def test_verify_email_invalid_code(self):
+        response = self.client.post("/account/email_verified/", {
+            "code": "999999"
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Invalid or expired OTP", response.data["message"])
