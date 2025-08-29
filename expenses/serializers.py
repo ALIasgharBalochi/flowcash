@@ -7,6 +7,14 @@ class ExpensesSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ["user"]
 
+    def update(self,instance,validated_data):
+        allowed_fields = ['amount',"category","date","description"]
+        for field in allowed_fields:
+            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
+        instance.save()
+        return instance
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta: 
         model = Category

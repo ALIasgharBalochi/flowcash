@@ -26,4 +26,9 @@ class CategoryView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ExpensesSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return Expense.objects.filter(user=self.request.user)
