@@ -19,3 +19,10 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta: 
         model = Category
         fields = '__all__'
+
+    def update(self, instance, validated_data):
+        allow_fields = ["name"]
+        for field in allow_fields:
+            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
+        instance.save()
+        return instance
