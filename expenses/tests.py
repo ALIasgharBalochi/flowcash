@@ -31,6 +31,20 @@ class CategoryTestCase(APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["name"],"fun")
 
+    def test_update_category(self):
+        Category.objects.create(
+            id=1,
+            name='fun',
+            user=self.user
+        )
+
+        response = self.client.patch('/expenses/category_details/1/',{
+            "name": "Fun and entertainment"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['name'], "Fun and entertainment")
+
 
 class ExpensesTestCase(APITestCase):
     def setUp(self):
