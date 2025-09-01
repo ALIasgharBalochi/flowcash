@@ -5,10 +5,12 @@ from rest_framework import status,generics
 from django.db.models import Q
 from .serializers import ExpensesSerializer,CategorySerializer
 from .models import Expense,Category
+from .filter import ExpensesFilter
 
 class ExpensesView(generics.ListCreateAPIView):
     serializer_class = ExpensesSerializer
     permission_classes = [IsAuthenticated]
+    filterset_class = ExpensesFilter
 
     def get_queryset(self):
         return Expense.objects.filter(user=self.request.user)
