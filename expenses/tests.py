@@ -105,3 +105,66 @@ class ExpensesTestCase(APITestCase):
 
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.data['description'],"Geting out with reza and abol")
+
+class ExpensesFilterTestCase(APITestCase):
+    def setUp(self):
+        # ساخت یوزر و لاگین
+        self.user = User.objects.create_user(
+            id=1,
+            email="test@example.com",
+            password="password123",
+            first_name="Test",
+            last_name="User"
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+        # ساخت category های مختلف
+        self.cat_food = Category.objects.create(name="Food", user=self.user)
+        self.cat_fun = Category.objects.create(name="Fun", user=self.user)
+        self.cat_travel = Category.objects.create(name="Travel", user=self.user)
+
+        # ساخت expense های مختلف
+        Expense.objects.create(amount=100000, category=self.cat_food, description="Lunch", date="2025-05-01", user=self.user)
+        Expense.objects.create(amount=500000, category=self.cat_fun, description="Cinema", date="2025-05-10", user=self.user)
+        Expense.objects.create(amount=2000000, category=self.cat_travel, description="Trip to city", date="2025-05-20", user=self.user)
+        Expense.objects.create(amount=250000, category=self.cat_food, description="Dinner", date="2025-05-15", user=self.user)
+        Expense.objects.create(amount=750000, category=self.cat_fun, description="Concert", date="2025-05-25", user=self.user)
+
+    def test_filter_by_category(self):
+        response = self.client.get("/expenses/expenses/?category__id={}".format(self.cat_fun.id))
+        self.assertEqual(response.status_code, 200)
+        # باید فقط expense های Fun بیاد
+        for exp in response.data:
+            self.assertEqual(exp['category'], self.cat_fun.id)
+
+    def test_filter_by_date_range(self):
+        response = self.client.get("/expenses/expenses/?date__gte=2025-05-10&date__lte=2025-05-20")
+        self.assertEqual(response.status_code, 200)
+        for exp in response.data:
+            self.assertGreaterEqual(exp['date'], "2025-05-10")
+            self.assertLessEqual(exp['date'], "2025-05-20")
+
+    def test_filter_by_amount_range(self):
+        response = self.client.get("/expenses/expenses/?min_amount=200000&max_amount=800000")
+        self.assertEqual(response.status_code, 200)
+        for exp in response.data:
+            self.assertGreaterEqual(float(exp['amount']), 200000)
+            self.assertLessEqual(float(exp['amount']), 800000)
+
+    def test_combined_filters(self):
+        # مثال ترکیبی: category Fun و amount بین 400000 تا 800000
+        response = self.client.get(
+            f"/expenses/expenses/?category__id={self.cat_fun.id}&min_amount=400000&max_amount=800000"
+        )
+        self.assertEqual(response.status_code, 200)
+        for exp in response.data:
+            self.assertEqual(exp['category'], self.cat_fun.id)
+            self.assertGreaterEqual(float(exp['amount']), 400000)
+            self.assertLessEqual(float(exp['amount']), 800000)
