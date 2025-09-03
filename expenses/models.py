@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import CustomUser 
+from django.utils.timezone import now
 
 class Category(models.Model):
     name = models.CharField(max_length=30)
@@ -14,13 +15,13 @@ class RecurringExpense(models.Model):
         ('yearly', 'Yearly')
     ]
 
-    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE)
-    category = models.ForeignKey(Category,on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='recurring_expenses')
+    category = models.ForeignKey(Category,on_delete=models.CASCADE,related_name='recurring_expenses')
     amount = models.DecimalField(max_digits=20,decimal_places=2)
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255,blank=True,null=True)
     frequency = models.CharField(max_length=20,choices=FREQUENCY_CHOICES)
     anchor_date = models.DateField()
-    next_run_at = models.DateField
+    next_run_at = models.DateField(default=now)
     active = models.BooleanField(default=True)
     end_date = models.DateField(null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
