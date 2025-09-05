@@ -168,3 +168,44 @@ class ExpensesFilterTestCase(APITestCase):
             self.assertEqual(exp['category'], self.cat_fun.id)
             self.assertGreaterEqual(float(exp['amount']), 400000)
             self.assertLessEqual(float(exp['amount']), 800000)
+
+class ExpensesRecurring(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            id=1,
+            email="test@example.com",
+            password="password123",
+            first_name="Test",
+            last_name="User"
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+    def test_create_recurring(self):
+        cat = Category.objects.create(
+            id=1,
+            name="fun",
+            user=self.user,
+            is_default=False
+        )
+
+        response = self.client.post('/expenses/recurring_expenses/',{
+            "amount": 2500000.00,
+            "category": 1,
+            "description": "اجاره خانه",
+            "frequency": "monthly",
+            "anchor_date": "2025-09-04",
+            "end_date": "2026-09-04",
+            "active": True
+        })
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['description'], 'اجاره خانه')
+
+
