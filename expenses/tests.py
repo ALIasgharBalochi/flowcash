@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from .models import Category,Expense
+from .models import Category,Expense,RecurringExpense
 User = get_user_model()
 
 class CategoryTestCase(APITestCase):
@@ -190,7 +190,7 @@ class ExpensesRecurring(APITestCase):
     def test_create_recurring(self):
         cat = Category.objects.create(
             id=1,
-            name="fun",
+            name="Home",
             user=self.user,
             is_default=False
         )
@@ -207,5 +207,34 @@ class ExpensesRecurring(APITestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['description'], 'اجاره خانه')
+    
+    def test_updating_recurring_expenses(self):
+        cat = Category.objects.create(
+            id=1,
+            name="home",
+            user=self.user,
+            is_default=False
+        )
 
+        recurring_expenses = RecurringExpense.objects.create(
+            id=1,
+            amount=2500000.00,
+            description="به اقای محمودی اجاره خانه",
+            frequency="monthly",
+            anchor_date= "2025-09-04",
+            next_run_at="2025-09-05",
+            active=True,
+            end_date="2026-09-04",
+            created_at="2025-09-05T09:27:14.296468Z",
+            updated_at="2025-09-05T09:27:14.296514Z",
+            user=self.user,
+            category=cat
+        )  
+
+        response = self.client.patch('/expenses/recurring_expenses_details/1/',{
+            "description": "home rent"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['description'], "home rent")
 
