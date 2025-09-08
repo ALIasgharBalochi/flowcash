@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import CustomUser 
-from datetime import date
+from datetime import timedelta,date
+from dateutil.relativedelta import relativedelta
 
 class Category(models.Model):
     name = models.CharField(max_length=30)
@@ -26,6 +27,16 @@ class RecurringExpense(models.Model):
     end_date = models.DateField(null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_next_run(self):
+        if self.frequency == 'daily':
+            return self.next_run_at + timedelta(days=1)
+        if self.frequency == 'weekly': 
+            return self.next_run_at + timedelta(weeks=1)
+        if self.frequency == 'monthly':
+            return self.next_run_at + relativedelta(months=1)
+        if self.frequency == 'yearly': 
+            return self.next_run_at + relativedelta(years=1)
 
 
 class Expense(models.Model):
