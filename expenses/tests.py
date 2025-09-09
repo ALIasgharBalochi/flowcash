@@ -2,6 +2,8 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
 from .models import Category,Expense,RecurringExpense
+from .tasks import creating_recurring_costs
+from datetime import date
 User = get_user_model()
 
 class CategoryTestCase(APITestCase):
@@ -216,7 +218,7 @@ class ExpensesRecurring(APITestCase):
             is_default=False
         )
 
-        recurring_expenses = RecurringExpense.objects.create(
+        RecurringExpense.objects.create(
             id=1,
             amount=2500000.00,
             description="به اقای محمودی اجاره خانه",
@@ -237,4 +239,32 @@ class ExpensesRecurring(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['description'], "home rent")
+
+    def test_creating_expense_from_recurring(self):
+        category = Category.objects.create(
+            name="Rent",
+            user=self.user,
+            is_default=False
+        )
+
+        recurring = RecurringExpense.objects.create(
+            user=self.user,
+            category=category,
+            amount=1000000,
+            description="Monthly Rent",
+            frequency="monthly",
+            anchor_date=date.today(),
+            next_run_at=date.today(),
+            active=True
+        )
+
+        creating_recurring_costs()
+
+        expenses = Expense.objects.filter(recurring=recurring)
+        self.assertEqual(expenses.count(), 1)
+        self.assertEqual(expenses.first().amount, recurring.amount)
+        self.assertEqual(expenses.first().description, "Monthly Rent")
+
+        recurring.refresh_from_db()
+        self.assertGreater(recurring.next_run_at, date.today())
 
