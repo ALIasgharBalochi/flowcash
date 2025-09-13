@@ -18,15 +18,9 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
-class BaseIdModel(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
-
-    class Meta:
-         abstract = True
-    
 class CustomUser(AbstractUser):
     username = None
+    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     email = models.EmailField(unique=True,null=False,blank=False)
     is_verified = models.BooleanField(default=False)
 

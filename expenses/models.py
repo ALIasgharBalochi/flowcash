@@ -2,8 +2,10 @@ from django.db import models
 from users.models import CustomUser 
 from datetime import timedelta,date
 from dateutil.relativedelta import relativedelta
+import uuid
 
 class Category(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     name = models.CharField(max_length=30)
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,blank=True,null=True,related_name='category')
     is_default = models.BooleanField(default=False)
@@ -16,6 +18,7 @@ class RecurringExpense(models.Model):
         ('yearly', 'Yearly')
     ]
 
+    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='recurring_expenses')
     category = models.ForeignKey(Category,on_delete=models.CASCADE,related_name='recurring_expenses')
     amount = models.DecimalField(max_digits=20,decimal_places=2)
@@ -40,6 +43,7 @@ class RecurringExpense(models.Model):
 
 
 class Expense(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     amount = models.DecimalField(max_digits=20,decimal_places=2)
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,blank=True,related_name='expense')
     date = models.DateField(default=date.today())
@@ -54,6 +58,7 @@ class Budget(models.Model):
         ("weekly",'Weekly'),
         ("yearly","Yearly")
     ]
+    uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='budgets')
     category = models.ForeignKey(Category,null=True,blank=True,on_delete=models.SET_NULL,related_name='budgets')
     amount = models.DecimalField(max_digits=20,decimal_places=2)

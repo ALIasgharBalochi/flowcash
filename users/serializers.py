@@ -48,7 +48,6 @@ class ResetPasswordSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         token = attrs.get("token")
-        print('token',token)
 
         try:
             payload = jwt.decode(
