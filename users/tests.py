@@ -5,6 +5,7 @@ from .models import OTPToken
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework_simplejwt.tokens import RefreshToken
+from core.views import generate_reset_password_jwt
 
 User = get_user_model()
 
@@ -169,7 +170,7 @@ class ResetPasswordFlowTests(APITestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_reset_password_with_valid_token(self):
-        token = RefreshToken.for_user(self.user).access_token
+        token = generate_reset_password_jwt(self.user)
         response = self.client.post("/account/re_password/reset_password/", {"token": str(token), "new_password": "newpassword123"})
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()

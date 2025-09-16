@@ -6,7 +6,7 @@ from django.conf import settings
 
 def generate_reset_password_jwt(user):
     payload = {
-        "user_id": user.id,
+        "user_id": str(user.uuid),
         "email": user.email,
         "type": "reset_password",
         "exp": datetime.utcnow() + timedelta(minutes=10),

@@ -8,7 +8,7 @@ User = get_user_model()
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', "password","email","first_name","last_name")
+        fields = ('uuid', "password","email","first_name","last_name")
         extra_kwargs = {'password': {'write_only':True}}
 
     def create(self,validated_data):
@@ -23,7 +23,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id","email","is_verified","first_name","last_name") 
+        fields = ('uuid',"email","is_verified","first_name","last_name") 
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
@@ -55,8 +55,7 @@ class ResetPasswordSerializer(serializers.Serializer):
                 key=settings.SECRET_KEY,
                 algorithms=["HS256"]
             )
-            print('payload',payload)
-            user = User.objects.get(id=payload["user_id"])
+            user = User.objects.get(uuid=payload["user_id"])
         except jwt.ExpiredSignatureError:
             raise serializers.ValidationError({"token": "Activation link expired"})
         except jwt.InvalidTokenError:
