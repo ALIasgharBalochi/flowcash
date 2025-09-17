@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics 
 from django.db.models import Q
-from .serializers import ExpensesSerializer,CategorySerializer,RecurringExpenseSerializer
-from .models import Expense,Category,RecurringExpense
+from .serializers import ExpensesSerializer,CategorySerializer,RecurringExpenseSerializer,BudgetSerializer
+from .models import Expense,Category,RecurringExpense,Budget
 from .filter import ExpensesFilter
 
 class ExpensesView(generics.ListCreateAPIView):
@@ -58,4 +58,13 @@ class RecurringExpensesDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return RecurringExpense.objects.filter(user=self.request.user)
+
+class BudgetView(generics.ListCreateAPIView):
+    serializer_class = BudgetSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Budget.objects.filter(user=self.request.user)
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)
 
