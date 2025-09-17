@@ -83,3 +83,10 @@ class BudgetSerializer(serializers.ModelSerializer):
         model = Budget
         exclude = ['id','user']
     
+    def update(self,instanse,validated_data):
+        allow_field = ['category',"amount","period","active"]
+        for field in allow_field:
+            setattr(instanse,field,validated_data.get(field,getattr(instanse,field)))
+        instanse.save()
+        return instanse
+    
