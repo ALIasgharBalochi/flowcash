@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Expense,Category,RecurringExpense
+from .models import Expense,Category,RecurringExpense,Budget
 
 class ExpensesSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
@@ -73,3 +73,13 @@ class RecurringExpenseSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+class BudgetSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='uuid',
+        queryset=Category.objects.all()
+    )
+    class Meta:
+        model = Budget
+        exclude = ['id','user']
+    
