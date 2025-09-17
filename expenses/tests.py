@@ -272,3 +272,40 @@ class ExpensesRecurring(APITestCase):
         recurring.refresh_from_db()
         self.assertGreater(recurring.next_run_at, date.today())
 
+class Budget(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            id=1,
+            uuid="24455378-9df8-4973-9403-25ac7e4d4b2e",
+            email="test@example.com",
+            password="password123",
+            first_name="Test",
+            last_name="User"
+        )
+
+        self.category = Category.objects.create(
+            id=1,
+            uuid="32455378-9df8-4973-9403-25ac7e4d4b2e",
+            name="fun",
+            is_default=False
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+    
+
+    def test_create_budget(self):
+        response = self.client.post('/expenses/budget/',{
+            "category": "32455378-9df8-4973-9403-25ac7e4d4b2e",
+            "amount": 2000000.00,
+            "user": self.user,
+            "period": "monthly"
+        })
+
+        self.assertEqual(response.status_code,201)
+
