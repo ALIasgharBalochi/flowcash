@@ -37,6 +37,15 @@ class CategoryView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+class BudgetView(generics.ListCreateAPIView):
+    serializer_class = BudgetSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Budget.objects.filter(user=self.request.user)
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)
+
 class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ExpensesSerializer
     permission_classes = [IsAuthenticated]
@@ -59,12 +68,10 @@ class RecurringExpensesDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return RecurringExpense.objects.filter(user=self.request.user)
 
-class BudgetView(generics.ListCreateAPIView):
+class BudgetDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BudgetSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'uuid'
 
     def get_queryset(self):
         return Budget.objects.filter(user=self.request.user)
-    def perform_create(self, serializer):
-        return serializer.save(user=self.request.user)
-
