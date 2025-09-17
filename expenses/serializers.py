@@ -1,11 +1,14 @@
 from rest_framework import serializers
 from .models import Expense,Category,RecurringExpense
-from datetime import datetime
 
 class ExpensesSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='uuid',
+        queryset=Category.objects.all()
+    )
     class Meta:
         model = Expense
-        fields = '__all__'
+        exclude = ['id','user']
         read_only_fields = ["user"]
 
     def update(self,instance,validated_data):
@@ -19,7 +22,7 @@ class ExpensesSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta: 
         model = Category
-        fields = '__all__'
+        exclude = ['id','user']
 
     def update(self, instance, validated_data):
         allow_fields = ["name"]
@@ -29,9 +32,13 @@ class CategorySerializer(serializers.ModelSerializer):
         return instance
 
 class RecurringExpenseSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='uuid',
+        queryset=Category.objects.all()
+    )
     class Meta:
         model = RecurringExpense
-        fields = '__all__'
+        exclude = ['id','user']
         read_only_fields = ['user', 'created_at', 'updated_at']
         extra_kwargs = {
             'frequency': {'required': False},

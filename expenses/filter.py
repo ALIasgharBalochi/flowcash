@@ -17,5 +17,5 @@ class ExpensesFilter(FilterSet):
         model = Expense
         fields = {
             'date': ["gte","lte"],
-            'category__id': ['exact']
+            'category__uuid': ['exact']
         }

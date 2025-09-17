@@ -40,20 +40,21 @@ class CategoryView(generics.ListCreateAPIView):
 class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ExpensesSerializer
     permission_classes = [IsAuthenticated]
-
+    lookup_field = 'uuid'
     def get_queryset(self):
         return Expense.objects.filter(user=self.request.user)
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
-
+    lookup_field = 'uuid'
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user)
 
 class RecurringExpensesDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RecurringExpenseSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'uuid'
 
     def get_queryset(self):
         return RecurringExpense.objects.filter(user=self.request.user)

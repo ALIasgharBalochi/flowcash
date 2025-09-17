@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from .models import Category,Expense,RecurringExpense
 from .tasks import creating_recurring_costs
 from datetime import date
+import uuid 
 User = get_user_model()
 
 class CategoryTestCase(APITestCase):
@@ -36,11 +37,12 @@ class CategoryTestCase(APITestCase):
     def test_update_category(self):
         Category.objects.create(
             id=1,
+            uuid="94455398-9df8-4973-9403-25ac7e4d4b2e",
             name='fun',
             user=self.user
         )
 
-        response = self.client.patch('/expenses/category_details/1/',{
+        response = self.client.patch('/expenses/category_details/94455398-9df8-4973-9403-25ac7e4d4b2e/',{
             "name": "Fun and entertainment"
         })
 
@@ -70,6 +72,7 @@ class ExpensesTestCase(APITestCase):
     def test_create_expense(self):
         Category.objects.create(
             id=1,
+            uuid="94355398-9df8-4973-9403-25ac7e4d4b2e",
             name="fun",
             user=self.user,
             is_default=False
@@ -77,7 +80,7 @@ class ExpensesTestCase(APITestCase):
 
         response = self.client.post('/expenses/expenses/',{
         "amount":250000.00,
-        "category": 1,
+        "category": "94355398-9df8-4973-9403-25ac7e4d4b2e",
         "description": "Going out with friends ",
         "date":"2025-05-12"
         })
@@ -94,6 +97,7 @@ class ExpensesTestCase(APITestCase):
         )
         Expense.objects.create(
             id=1,
+            uuid="94455398-9df8-4973-9403-25ac7e4d4b2f",
             amount=250000.00,
             category=cat,
             description="Going out with frends",
@@ -101,7 +105,7 @@ class ExpensesTestCase(APITestCase):
             user=self.user
         )
 
-        response = self.client.patch("/expenses/expenses_details/1/",{
+        response = self.client.patch("/expenses/expenses_details/94455398-9df8-4973-9403-25ac7e4d4b2f/",{
             "description": "Geting out with reza and abol"
         })
 
@@ -128,9 +132,9 @@ class ExpensesFilterTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
         # ساخت category های مختلف
-        self.cat_food = Category.objects.create(name="Food", user=self.user)
-        self.cat_fun = Category.objects.create(name="Fun", user=self.user)
-        self.cat_travel = Category.objects.create(name="Travel", user=self.user)
+        self.cat_food = Category.objects.create(uuid="94455398-9df8-4973-9403-25ac7e4d4b4d",name="Food", user=self.user)
+        self.cat_fun = Category.objects.create(uuid="94455398-9df8-4973-9403-25ac7e4d4b1c",name="Fun", user=self.user)
+        self.cat_travel = Category.objects.create(uuid="21455398-9df8-4973-9403-25ac7e4d4b2e",name="Travel", user=self.user)
 
         # ساخت expense های مختلف
         Expense.objects.create(amount=100000, category=self.cat_food, description="Lunch", date="2025-05-01", user=self.user)
@@ -140,11 +144,10 @@ class ExpensesFilterTestCase(APITestCase):
         Expense.objects.create(amount=750000, category=self.cat_fun, description="Concert", date="2025-05-25", user=self.user)
 
     def test_filter_by_category(self):
-        response = self.client.get("/expenses/expenses/?category__id={}".format(self.cat_fun.id))
+        response = self.client.get("/expenses/expenses/?category__uuid={}".format(self.cat_fun.uuid))
         self.assertEqual(response.status_code, 200)
-        # باید فقط expense های Fun بیاد
         for exp in response.data:
-            self.assertEqual(exp['category'], self.cat_fun.id)
+            self.assertEqual(exp['category'], uuid.UUID(self.cat_fun.uuid))
 
     def test_filter_by_date_range(self):
         response = self.client.get("/expenses/expenses/?date__gte=2025-05-10&date__lte=2025-05-20")
@@ -161,13 +164,12 @@ class ExpensesFilterTestCase(APITestCase):
             self.assertLessEqual(float(exp['amount']), 800000)
 
     def test_combined_filters(self):
-        # مثال ترکیبی: category Fun و amount بین 400000 تا 800000
         response = self.client.get(
-            f"/expenses/expenses/?category__id={self.cat_fun.id}&min_amount=400000&max_amount=800000"
+            f"/expenses/expenses/?category__uuid={self.cat_fun.uuid}&min_amount=400000&max_amount=800000"
         )
         self.assertEqual(response.status_code, 200)
         for exp in response.data:
-            self.assertEqual(exp['category'], self.cat_fun.id)
+            self.assertEqual(exp['category'], uuid.UUID(self.cat_fun.uuid))
             self.assertGreaterEqual(float(exp['amount']), 400000)
             self.assertLessEqual(float(exp['amount']), 800000)
 
@@ -175,6 +177,7 @@ class ExpensesRecurring(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             id=1,
+            uuid="24455378-9df8-4973-9403-25ac7e4d4b2e",
             email="test@example.com",
             password="password123",
             first_name="Test",
@@ -192,6 +195,7 @@ class ExpensesRecurring(APITestCase):
     def test_create_recurring(self):
         cat = Category.objects.create(
             id=1,
+            uuid="94455378-9df8-4973-9403-25ac7e4d4b2e",
             name="Home",
             user=self.user,
             is_default=False
@@ -199,20 +203,19 @@ class ExpensesRecurring(APITestCase):
 
         response = self.client.post('/expenses/recurring_expenses/',{
             "amount": 2500000.00,
-            "category": 1,
-            "description": "اجاره خانه",
+            "category": "94455378-9df8-4973-9403-25ac7e4d4b2e",
+            "description": "home rent",
             "frequency": "monthly",
-            "anchor_date": "2025-09-04",
-            "end_date": "2026-09-04",
-            "active": True
+            "anchor_date": "2025-09-16",
         })
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['description'], 'اجاره خانه')
+        self.assertEqual(response.data['description'], "home rent")
     
     def test_updating_recurring_expenses(self):
         cat = Category.objects.create(
             id=1,
+            uuid="94455398-9df8-4973-9403-25ac7e4d3b2e",
             name="home",
             user=self.user,
             is_default=False
@@ -220,6 +223,7 @@ class ExpensesRecurring(APITestCase):
 
         RecurringExpense.objects.create(
             id=1,
+            uuid="94455398-9df8-4973-9403-25ac7e4d4b3e",
             amount=2500000.00,
             description="به اقای محمودی اجاره خانه",
             frequency="monthly",
@@ -233,7 +237,7 @@ class ExpensesRecurring(APITestCase):
             category=cat
         )  
 
-        response = self.client.patch('/expenses/recurring_expenses_details/1/',{
+        response = self.client.patch('/expenses/recurring_expenses_details/94455398-9df8-4973-9403-25ac7e4d4b3e/',{
             "description": "home rent"
         })
 
