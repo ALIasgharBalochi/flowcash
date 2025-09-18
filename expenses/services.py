@@ -10,7 +10,7 @@ def calculate_expenses_sum(user,start_date,end_date,category=None):
     if category:
         filters['category'] = category
 
-    total_amount = Expense.objects.filter(**filters).aaggregate(
+    total_amount = Expense.objects.filter(**filters).aggregate(
         total=Sum('amount'
                   ))['total'] or 0
 
