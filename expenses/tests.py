@@ -1,9 +1,10 @@
-from django.test import TestCase
+from django.urls import reverse
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from .models import Category,Expense,RecurringExpense
+from .models import Category,Expense,RecurringExpense,Budget
 from .tasks import creating_recurring_costs
-from datetime import date
+from datetime import date,timedelta
+from rest_framework import status
 import uuid 
 User = get_user_model()
 
@@ -193,7 +194,7 @@ class ExpensesRecurring(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
     def test_create_recurring(self):
-        cat = Category.objects.create(
+        Category.objects.create(
             id=1,
             uuid="94455378-9df8-4973-9403-25ac7e4d4b2e",
             name="Home",
@@ -272,7 +273,7 @@ class ExpensesRecurring(APITestCase):
         recurring.refresh_from_db()
         self.assertGreater(recurring.next_run_at, date.today())
 
-class Budget(APITestCase):
+class BudgetTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             id=1,
@@ -309,3 +310,80 @@ class Budget(APITestCase):
 
         self.assertEqual(response.status_code,201)
 
+class BudgetStatus(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+        id=1,
+        uuid="24455378-9df8-4973-9403-25ac7e4d4b2e",
+        email="test@example.com",
+        password="password123",
+        first_name="Test",
+        last_name="User"
+        )
+
+        self.category = Category.objects.create(
+        id=1,
+        uuid="32455378-9df8-4973-9403-25ac7e4d4b2e",
+        name="fun",
+        is_default=False
+        )
+
+        response = self.client.post("/account/login/token/", {
+            "email": "test@example.com",
+            "password": "password123"
+        }, format="json")
+
+        self.token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+        self.budget = Budget.objects.create(
+            user=self.user,
+            category=self.category,
+            amount=200.00,
+        )
+
+    # خرجی داخل بازه بودجه
+        Expense.objects.create(
+        user=self.user,
+        category=self.category,
+        amount=50,
+        date=self.budget.created_at.date(),  # همون روز بودجه
+        )
+
+    # خرجی خارج از بازه بودجه
+        Expense.objects.create(
+        user=self.user,
+        category=self.category,
+        amount=999,
+        date=self.budget.created_at.date() - timedelta(days=5),
+        )
+
+        self.url = reverse("budget_status", kwargs={"uuid": self.budget.uuid})
+    def test_budget_status_success(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(data["amount_spent"], 50)  
+        self.assertEqual(data["remaining"], 150)
+        self.assertEqual(data["percentage"], 25.0)
+
+    def test_budget_status_unauthenticated(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_budget_status_forbidden(self):
+        other_user = User.objects.create_user(
+            id=2,
+            uuid="24321378-9df8-4973-9403-25ac7e4d4b2e",
+            email="test2@example.com",
+            password="password1234",
+            first_name="Test2",
+            last_name="User2"
+        )
+
+        self.client.force_authenticate(user=other_user)
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN) 
