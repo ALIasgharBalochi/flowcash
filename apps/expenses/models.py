@@ -1,8 +1,10 @@
 from django.db import models
-from apps.accounts.models import CustomUser 
+from django.contrib.auth import get_user_model
 from datetime import timedelta,date
 from dateutil.relativedelta import relativedelta
 import uuid
+
+CustomUser = get_user_model()
 
 class Category(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
