@@ -12,7 +12,7 @@ environ.Env.read_env(BASE_DIR/ '.env')
 
 SECRET_KEY = env("SECRET_KEY")
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.users',
+    'apps.accounts',
     'apps.expenses',
     'rest_framework',
     'rest_framework_simplejwt',

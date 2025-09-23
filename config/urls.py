@@ -20,7 +20,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('account/',include('apps.users.urls')),
+    path('account/',include('apps.accounts.urls')),
     path('expenses/', include('apps.expenses.urls')),
     *([path("silk/",include('silk.urls'))] if settings.DEBUG else []), # adding silk/ if debug is true
 ]

@@ -1,5 +1,5 @@
 from django.db import models
-from apps.users.models import CustomUser 
+from apps.accounts.models import CustomUser 
 from datetime import timedelta,date
 from dateutil.relativedelta import relativedelta
 import uuid
