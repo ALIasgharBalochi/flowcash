@@ -49,8 +49,6 @@ class ChangePasswordView(APIView):
             user.set_password(serializer.validated_data["new_password"])
             user.save()
 
-            update_session_auth_hash(request,user)
-
             return Response({"message": "Password changed successfully."},status=status.HTTP_200_OK)
         return Response({"message": serializer.error},status=status.HTTP_400_BAD_REQUEST)
 
@@ -96,8 +94,6 @@ class ResetPasswrodView(APIView):
 
             user.set_password(serializer.validated_data["new_password"])
             user.save()
-
-            update_session_auth_hash(request,user)
 
             return Response({'message':'Password changed successfully.'},status=status.HTTP_200_OK)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
