@@ -7,8 +7,7 @@ from django.db.models import Q
 from .serializers import ExpensesSerializer,CategorySerializer,RecurringExpenseSerializer,BudgetSerializer
 from .models import Expense,Category,RecurringExpense,Budget
 from .filter import ExpensesFilter
-from .services import calculate_expenses_sum
-from datetime import date
+from .services import calculate_budget_status
 
 class ExpensesView(generics.ListCreateAPIView):
     serializer_class = ExpensesSerializer
@@ -90,9 +89,7 @@ class BudgetStatusView(APIView):
         if user != budget.user:
             return Response({"detail": "You do not have permission to access this budget."},status=status.HTTP_403_FORBIDDEN)
         
-        amount_spent = calculate_expenses_sum(user,budget.created_at.date(),date.today(),budget.category)
-        remaining = budget.amount - amount_spent
-        percentage = (amount_spent / budget.amount * 100) if budget.amount > 0 else 0
+        amount_spent,remaining,percentage = calculate_budget_status(budget,user)
         return Response({"amount_spent": amount_spent,"remaining": remaining,"percentage": round(percentage,2)},status=status.HTTP_200_OK)
         
 
