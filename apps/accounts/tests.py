@@ -132,7 +132,7 @@ class VerifyEmailTest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
     def test_verify_email_success(self):
-        otp_token = OTPToken.objects.create(
+        OTPToken.objects.create(
             user=self.user,
             otp_code="123456",
             expires_at=timezone.now() + timedelta(minutes=5)
