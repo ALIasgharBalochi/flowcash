@@ -1,35 +1,21 @@
 from rest_framework import serializers
-from .models import Expense,Category,RecurringExpense,Budget
+from apps.expenses.models import Expense,Category,RecurringExpense,Budget
 
-class ExpensesSerializer(serializers.ModelSerializer):
+class BudgetSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='uuid',
         queryset=Category.objects.all()
     )
     class Meta:
-        model = Expense
+        model = Budget
         exclude = ['id','user']
-        read_only_fields = ["user"]
-
-    def update(self,instance,validated_data):
-        allowed_fields = ['amount',"category","date","description"]
-        for field in allowed_fields:
-            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
-        instance.save()
-        return instance
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = Category
-        exclude = ['id','user']
-
-    def update(self, instance, validated_data):
-        allow_fields = ["name"]
-        for field in allow_fields:
-            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
-        instance.save()
-        return instance
+    
+    def update(self,instanse,validated_data):
+        allow_field = ['category',"amount","period","active"]
+        for field in allow_field:
+            setattr(instanse,field,validated_data.get(field,getattr(instanse,field)))
+        instanse.save()
+        return instanse
 
 class RecurringExpenseSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
@@ -74,19 +60,32 @@ class RecurringExpenseSerializer(serializers.ModelSerializer):
 
         return data
 
-class BudgetSerializer(serializers.ModelSerializer):
+class ExpensesSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='uuid',
         queryset=Category.objects.all()
     )
     class Meta:
-        model = Budget
+        model = Expense
         exclude = ['id','user']
-    
-    def update(self,instanse,validated_data):
-        allow_field = ['category',"amount","period","active"]
-        for field in allow_field:
-            setattr(instanse,field,validated_data.get(field,getattr(instanse,field)))
-        instanse.save()
-        return instanse
-    
+        read_only_fields = ["user"]
+
+    def update(self,instance,validated_data):
+        allowed_fields = ['amount',"category","date","description"]
+        for field in allowed_fields:
+            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
+        instance.save()
+        return instance
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Category
+        exclude = ['id','user']
+
+    def update(self, instance, validated_data):
+        allow_fields = ["name"]
+        for field in allow_fields:
+            setattr(instance,field,validated_data.get(field,getattr(instance,field)))
+        instance.save()
+        return instance
