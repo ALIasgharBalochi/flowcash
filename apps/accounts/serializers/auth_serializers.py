@@ -15,19 +15,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('uuid',"email","is_verified","first_name","last_name") 
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField()
-    new_password = serializers.CharField()
-
-    def validate_new_password(self,value):
-        if len(value) < 6:
-            raise serializers.ValidationError('Password must be at least 6 characters long.')
-        return value
 
 class RequestResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -64,12 +51,4 @@ class ResetPasswordSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         if len(value) < 6:
             raise serializers.ValidationError("Password must be at least 6 characters long.")
-        return value
-
-class VerifiedEmail(serializers.Serializer):
-    code = serializers.IntegerField()
-
-    def validate_code(self,value):
-        if len(str(value)) < 6:
-             raise serializers.ValidationError('code must be at least 6 characters log.')
         return value
