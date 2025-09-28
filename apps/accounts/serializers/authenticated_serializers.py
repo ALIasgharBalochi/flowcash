@@ -12,12 +12,12 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_old_password(self,value):
         user = self.context['request'].user
         if not user.check_password(value):
-            return serializers.ValidationError('the current password is incorrect')
+            raise serializers.ValidationError('the current password is incorrect')
         return value
 
     def save(self,**kwargs):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
-        user.save
+        user.save()
         return user
 
