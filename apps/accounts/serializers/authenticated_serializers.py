@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
@@ -9,3 +8,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         if len(value) < 6:
             raise serializers.ValidationError('Password must be at least 6 characters long.')
         return value
+
+    def validate_old_password(self,value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            return serializers.ValidationError('the current password is incorrect')
+        return value
+
+    def save(self,**kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save
+        return user
+
