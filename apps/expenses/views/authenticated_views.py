@@ -5,72 +5,52 @@ from apps.expenses.serializers import ExpensesSerializer,CategorySerializer,Recu
 from apps.expenses.models import Expense,Category,RecurringExpense,Budget
 from apps.expenses.filter import ExpensesFilter
 
-class ExpensesView(generics.ListCreateAPIView):
+class UserOwnedQuerySetMixin:
+    @property
+    def model(self):
+        return self.serializer_class.Meta.model
+    def get_queryset(self):
+        return self.model.objects.filter(user=self.request.user)
+    def perform_create(self,serializer):
+        serializer.save(user=self.request.user)
+
+class ExpensesView(UserOwnedQuerySetMixin,generics.ListCreateAPIView):
     serializer_class = ExpensesSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = ExpensesFilter
 
-    def get_queryset(self):
-        return Expense.objects.filter(user=self.request.user)
-    
-    def perform_create(self,serializer):
-        serializer.save(user=self.request.user)
 
-class RecurringExpenseView(generics.ListCreateAPIView):
+class RecurringExpenseView(UserOwnedQuerySetMixin,generics.ListCreateAPIView):
     serializer_class = RecurringExpenseSerializer
     permission_classes = [IsAuthenticated]
     
-    def get_queryset(self):
-        return RecurringExpense.objects.filter(user=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
-class CategoryView(generics.ListCreateAPIView):
+class CategoryView(UserOwnedQuerySetMixin,generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Category.objects.filter(Q(is_default=True) | Q(user=self.request.user)) 
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class BudgetView(generics.ListCreateAPIView):
+class BudgetView(UserOwnedQuerySetMixin,generics.ListCreateAPIView):
     serializer_class = BudgetSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Budget.objects.filter(user=self.request.user)
-    def perform_create(self, serializer):
-        return serializer.save(user=self.request.user)
-
-class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ExpenseDetailView(UserOwnedQuerySetMixin,generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ExpensesSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'uuid'
-    def get_queryset(self):
-        return Expense.objects.filter(user=self.request.user)
 
-class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CategoryDetailView(UserOwnedQuerySetMixin,generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'uuid'
-    def get_queryset(self):
-        return Category.objects.filter(user=self.request.user)
 
-class RecurringExpensesDetailView(generics.RetrieveUpdateDestroyAPIView):
+class RecurringExpensesDetailView(UserOwnedQuerySetMixin,generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RecurringExpenseSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'uuid'
 
-    def get_queryset(self):
-        return RecurringExpense.objects.filter(user=self.request.user)
-
-class BudgetDetails(generics.RetrieveUpdateDestroyAPIView):
+class BudgetDetailsView(UserOwnedQuerySetMixin,generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BudgetSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'uuid'
-
-    def get_queryset(self):
-        return Budget.objects.filter(user=self.request.user)
