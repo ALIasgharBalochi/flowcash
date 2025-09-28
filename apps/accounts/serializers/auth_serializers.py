@@ -48,6 +48,12 @@ class ResetPasswordSerializer(serializers.Serializer):
         attrs["user"] = user  
         return attrs
 
+    def save(self,**kwargs):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
+
     def validate_new_password(self, value):
         if len(value) < 6:
             raise serializers.ValidationError("Password must be at least 6 characters long.")

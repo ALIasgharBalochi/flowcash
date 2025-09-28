@@ -27,3 +27,24 @@ def verify_email_token(user,code):
         otp_token.delete()
         return True
     return False
+
+def send_reset_password_email(user,token):
+        send_mail(
+            subject="FlowCash Password Reset Request",
+            message=f"""
+                Hello {user.first_name},
+
+                We received a request to reset your password for your FlowCash account.
+                Click the link below to reset your password:
+
+                your token it is : {token}
+
+                If you did not request this, please ignore this email.
+
+                Thanks,
+                The FlowCash Team
+                """,
+            from_email="alibalochi1910@gmail.com",
+            recipient_list=[user.email]
+            ) 
+

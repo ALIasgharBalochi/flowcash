@@ -5,8 +5,7 @@ from apps.accounts.serializers import UserRegisterSerializer,RequestResetPasswor
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from common.utils.jwtencode import generate_reset_password_jwt
-from django.core.mail import send_mail
-
+from apps.accounts.services import send_reset_password_email
 User = get_user_model()
 
 class UserRegisterView(APIView):
@@ -27,27 +26,11 @@ class RequestResetPasswordView(APIView):
         serializer = RequestResetPasswordSerializer(data=request.data)
 
         if serializer.is_valid():
-            user = User.objects.get(email=serializer.validated_data["email"])
+            user = User.objects.filter(email=serializer.validated_data["email"]).first()
+            if not user:
+                return Response({"message": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
             token = generate_reset_password_jwt(user)
-
-            send_mail(
-                subject="FlowCash Password Reset Request",
-                message=f"""
-                    Hello {user.first_name},
-
-                    We received a request to reset your password for your FlowCash account.
-                    Click the link below to reset your password:
-
-                    your token it is : {token}
-
-                    If you did not request this, please ignore this email.
-
-                    Thanks,
-                    The FlowCash Team
-                    """,
-                from_email="alibalochi1910@gmail.com",
-                recipient_list=[user.email]
-                ) 
+            send_reset_password_email(user,token)
             return Response({"message": "Token successfully sent to email."}, status=status.HTTP_200_OK)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,10 +41,6 @@ class ResetPasswrodView(APIView):
         serializer = ResetPasswordSerializer(data=request.data)
 
         if serializer.is_valid():
-            user = serializer.validated_data["user"]
-
-            user.set_password(serializer.validated_data["new_password"])
-            user.save()
-
+            serializer.save()
             return Response({'message':'Password changed successfully.'},status=status.HTTP_200_OK)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
