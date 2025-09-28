@@ -1,6 +1,8 @@
 from .models import Expense
-from django.db.models import Sum
+from django.db.models import Sum,Q
 from datetime import date
+from .models import RecurringExpense
+from datetime import datetime
 
 def calculate_expenses_sum(user,start_date,end_date,category=None):
     filters = {
@@ -22,4 +24,24 @@ def calculate_budget_status(budget,user):
     remaining = budget.amount - amount_spent
     percentage = (amount_spent / budget.amount * 100) if budget.amount > 0 else 0
     return amount_spent,remaining,percentage
-    
+
+def get_active_recurrings():
+    return RecurringExpense.objects.select_related('category','user').filter(
+        next_run_at=date.today(),
+        active=True).filter(
+            Q(end_date__isnull=True) | 
+            Q(end_date__gte=date.today())
+        )   
+def build_expenses_for_recurring(recurring):
+    return Expense(
+        amount=recurring.amount,
+        category=recurring.category,
+        date=datetime.today(),
+        description=recurring.description,
+        user=recurring.user,
+        recurring=recurring
+    )
+def update_next_run_at(recurrings):
+    for recurring in recurrings:
+        recurring.next_run_at = recurring.get_next_run()
+    RecurringExpense.objects.bulk_update(recurrings,['next_run_at'])
