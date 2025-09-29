@@ -1,12 +1,13 @@
 from django.core.mail import send_mail
 from apps.accounts.models import OTPToken
 from django.utils import timezone
+from .tasks import send_verified_email
 
 def create_and_send_email_token(user):
     OTPToken.objects.filter(user=user).delete()   
     otp_token = OTPToken.create_token(user)
 
-    send_mail(
+    send_verified_email.delay(
         subject="Your OTP code for email verification",
         message=f"Your OTP code is: {otp_token.otp_code}",
         from_email="alibalochi1910@gmail.com",
