@@ -10,7 +10,7 @@ class BudgetStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self,request,uuid):
-        budget = get_object_or_404(Budget,uuid=uuid)
+        budget = get_object_or_404(Budget.objects.select_related('user'),uuid=uuid)
         user = request.user
 
         if user != budget.user:
