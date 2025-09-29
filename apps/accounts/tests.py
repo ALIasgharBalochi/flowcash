@@ -1,4 +1,4 @@
-from rest_framework.test import APITestCase,APIClient
+from rest_framework.test import APITestCase,APIClient,override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .models import OTPToken
@@ -153,6 +153,10 @@ class VerifyEmailTest(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("Invalid or expired OTP", response.data["message"])
 
+@override_settings(
+    CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_TASK_EAGER_PROPAGATES=True
+)
 class ResetPasswordFlowTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
