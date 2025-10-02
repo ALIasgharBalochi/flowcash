@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 import jwt
 from django.conf import settings
+from apps.accounts.services import verify_google_id_token,get_or_created_user
+from common.utils.create_jwt_for_user import create_jwt_for_user
 
 User = get_user_model()
 
@@ -58,3 +60,20 @@ class ResetPasswordSerializer(serializers.Serializer):
         if len(value) < 6:
             raise serializers.ValidationError("Password must be at least 6 characters long.")
         return value
+
+class GoogleAuthSerializer(serializers.Serializer):
+    id_token = serializers.CharField()
+
+    def validate_id_token(self,value):
+        idinfo = verify_google_id_token(value)
+        if not idinfo:
+            raise serializers.ValidationError('Invalid Google token')
+        self.idinfo = idinfo
+        return value 
+
+    def save(self,**kwargs):
+        user = get_or_created_user(self.idinfo)
+        jwt_token = create_jwt_for_user(user)
+        return jwt_token
+
+

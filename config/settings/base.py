@@ -94,6 +94,9 @@ SIMPLE_JWT = {
        'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
 
+#GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
