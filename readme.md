@@ -13,7 +13,8 @@ Built with **Django** and **Django REST Framework**, this project provides RESTf
 - 🗂 **Monthly, Weekly, and Yearly Budgets**  
 - 📡 **RESTful APIs** for all CRUD operations  
 - 📊 **Scalable Database Design** with ERD  
-- 🛠 **Highly Extensible Architecture** for analytics and reporting  
+- 🛠 **Highly Extensible Architecture** for analytics and reporting 
+- 🌐 Google OAuth2 Login / Signup 
 
 ---
 
