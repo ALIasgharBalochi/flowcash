@@ -5,6 +5,7 @@ from .models import OTPToken
 from django.utils import timezone
 from datetime import timedelta
 from common.utils.jwtencode import generate_reset_password_jwt
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -182,3 +183,53 @@ class ResetPasswordFlowTests(APITestCase):
     def test_reset_password_with_invalid_token(self):
         response = self.client.post("/account/re_password/reset_password/", {"token": "invalidtoken", "new_password": "newpassword123"})
         self.assertEqual(response.status_code, 400)
+
+class GoogleAuthTests(APITestCase):
+    def setUp(self):
+        self.url = "/account/register/google_auth/"   
+
+    @patch("apps.accounts.serializers.auth_serializers.verify_google_id_token")  
+    def test_google_auth_success(self, mock_verify):
+        mock_verify.return_value = {
+        "email": "test@example.com",
+        "name": "Test User",
+        "given_name": "test",
+        "family_name": "user",
+        "sub": "1234567890"
+        }
+
+        response = self.client.post(self.url, {"id_token": "fake-token"}, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+        user = User.objects.get(email="test@example.com")
+        self.assertEqual(user.email, "test@example.com")
+
+    @patch("apps.accounts.serializers.auth_serializers.verify_google_id_token")
+    def test_google_auth_invalid_token(self, mock_verify):
+        mock_verify.return_value = None
+
+        response = self.client.post(self.url, {"id_token": "bad-token"}, format="json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Invalid Google token", str(response.data))
+
+    @patch("apps.accounts.serializers.auth_serializers.verify_google_id_token")
+    def test_google_auth_existing_user(self, mock_verify):
+        user = User.objects.create_user(email="exists@example.com", password="dummy-pass")
+
+        mock_verify.return_value = {
+            "email": "exists@example.com",
+            "name": "Existing User",
+            "given_name": "existing",
+            "family_name": "User",
+            "sub": "999999"
+        }
+
+        response = self.client.post(self.url, {"id_token": "fake-token"}, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.data)
+        self.assertEqual(User.objects.count(), 1)  
