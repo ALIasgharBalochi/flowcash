@@ -14,13 +14,13 @@ Built with **Django** and **Django REST Framework**, this project provides RESTf
 - 📡 **RESTful APIs** for all CRUD operations  
 - 📊 **Scalable Database Design** with ERD  
 - 🛠 **Highly Extensible Architecture** for analytics and reporting 
-- 🌐 Google OAuth2 Login / Signup 
+- 🌐 **Google OAuth2 Login / Signup** To increase the convenience and speed of user login
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend:** Python, Django, Django REST Framework , Redis, celery,djang-filter
+- **Backend:** Python, Django, Django REST Framework , Redis, celery,djang-filter,google-auth
 - **Database:** PostgreSQL   
 - **Tools:** Git, Django 
 
