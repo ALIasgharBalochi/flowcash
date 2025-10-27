@@ -12,6 +12,9 @@ class Category(models.Model):
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,blank=True,null=True,related_name='category')
     is_default = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 class RecurringExpense(models.Model):
     FREQUENCY_CHOICES = [
         ('daily', 'Daily'),
@@ -43,6 +46,8 @@ class RecurringExpense(models.Model):
         if self.frequency == 'yearly': 
             return self.next_run_at + relativedelta(years=1)
 
+    def __str__(self):
+        return self.user.first_name
 
 class Expense(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
@@ -53,6 +58,9 @@ class Expense(models.Model):
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='expense')
     created_at = models.DateTimeField(auto_now_add=True)
     recurring = models.ForeignKey(RecurringExpense,null=True,blank=True,on_delete=models.SET_NULL,related_name='expenses')
+
+    def __str__(self):
+        return self.user.first_name
 
 class Budget(models.Model):
     PERIOD_CHOICES = [
@@ -68,3 +76,5 @@ class Budget(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.user.first_name
