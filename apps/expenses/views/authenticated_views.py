@@ -4,15 +4,7 @@ from django.db.models import Q
 from apps.expenses.serializers import ExpensesSerializer,CategorySerializer,RecurringExpenseSerializer,BudgetSerializer
 from apps.expenses.models import Expense,Category,RecurringExpense,Budget
 from apps.expenses.filter import ExpensesFilter
-
-class UserOwnedQuerySetMixin:
-    @property
-    def model(self):
-        return self.serializer_class.Meta.model
-    def get_queryset(self):
-        return self.model.objects.filter(user=self.request.user)
-    def perform_create(self,serializer):
-        serializer.save(user=self.request.user)
+from common.mixins.UserMixins import UserOwnedQuerySetMixin
 
 class ExpensesView(UserOwnedQuerySetMixin,generics.ListCreateAPIView):
     serializer_class = ExpensesSerializer

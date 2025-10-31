@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/',include('apps.accounts.urls')),
     path('expenses/', include('apps.expenses.urls')),
+    path('income/',include('apps.income.urls')),
     *([path("silk/",include('silk.urls'))] if settings.DEBUG else []), # adding silk/ if debug is true
 ]
